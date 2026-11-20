@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🔒</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #170a1c;
+    --plum: #2e1233;
+    --rose: #ff3d71;
+    --blush: #ffb3c7;
+    --glow: #ffd9b0;
+    --w: min(78vw, 22rem, 58vh); /* envelope width */
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+
+  body {
+    background: radial-gradient(ellipse at 50% 42%, var(--plum) 0%, var(--night) 68%);
+    color: var(--blush);
+    font-family: "Cairo", "Noto Naskh Arabic", system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  main {
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+  }
+  main > * { grid-area: 1 / 1; }
+
+  /* ---------- Gate ---------- */
+  .gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: min(100%, 22rem);
+    transition: opacity 0.7s ease, transform 0.7s ease, visibility 0s linear 0.7s;
+  }
+  .open .gate { opacity: 0; transform: translateY(12px); visibility: hidden; pointer-events: none; }
+
+  .lock { width: clamp(5rem, 24vw, 9rem); height: clamp(5rem, 24vw, 9rem); color: var(--blush); opacity: 0.8; margin-bottom: 0.8rem; }
+
+  .row { display: flex; gap: 0.6rem; width: 100%; }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.85rem 1rem;
+    font: inherit;
+    font-size: 1rem; /* 16px avoids zoom on iOS */
+    color: #fff;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(255, 179, 199, 0.35);
+    border-radius: 0.9rem;
+    text-align: center;
+    letter-spacing: 0.08em;
+  }
+  input::placeholder { color: rgba(255, 179, 199, 0.55); letter-spacing: 0; }
+
+  .go {
+    padding: 0.85rem 1.4rem;
+    font: inherit;
+    font-weight: 700;
+    color: #2a0a17;
+    background: var(--blush);
+    border: 0;
+    border-radius: 0.9rem;
+    cursor: pointer;
+  }
+  .go:hover { background: var(--glow); }
+
+  input:focus-visible, .go:focus-visible {
+    outline: 3px solid var(--glow);
+    outline-offset: 2px;
+  }
+
+  .msg-error { min-height: 1.5rem; font-size: 0.95rem; color: #ff9db6; }
+
+  .shake { animation: shake 0.42s; }
+  @keyframes shake {
+    20%, 60% { transform: translateX(-8px); }
+    40%, 80% { transform: translateX(8px); }
+  }
+
+  .sr {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+
+  /* ---------- Scene: the envelope ---------- */
+  .scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(var(--w) * 0.18);
+    padding-top: calc(var(--w) * 0.38); /* room for the flap and the letter above */
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.9s ease, visibility 0s linear;
+  }
+  .open .scene { visibility: visible; opacity: 1; transition-delay: 0.6s; }
+
+  .bob { animation: bob 3.4s ease-in-out infinite alternate; }
+  .scene.opened .bob { animation: none; }
+  @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+
+  .env {
+    all: unset;
+    display: block;
+    position: relative;
+    width: var(--w);
+    height: calc(var(--w) * 0.7);
+    perspective: 900px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .env:focus-visible { outline: 3px solid var(--glow); outline-offset: 8px; }
+  .scene.opened .env { cursor: default; }
+
+  .env-back {
+    position: absolute; inset: 0;
+    background: #c98b98;
+    border-radius: 0.25rem;
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.5);
+  }
+
+  /* The letter inside */
+  .letter {
+    position: absolute;
+    left: 6%; right: 6%; top: 6%;
+    height: 86%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    padding: 0.5rem;
+    text-align: center;
+    border-radius: 0.2rem;
+    background:
+      repeating-linear-gradient(to bottom,
+        transparent 0, transparent calc(var(--w) * 0.085 - 1px),
+        rgba(140, 50, 75, 0.13) calc(var(--w) * 0.085 - 1px),
+        rgba(140, 50, 75, 0.13) calc(var(--w) * 0.085)),
+      #fff6ea;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  .letter-text {
+    font-family: "Great Vibes", "Dancing Script", cursive;
+    font-size: calc(var(--w) * 0.125);
+    line-height: 1.3;
+    color: #7a1d3a;
+    white-space: pre-line;
+    direction: ltr;
+    opacity: 0;
+  }
+  .scene.opened .letter-text { animation: fade-in 1.4s ease 2.8s forwards; }
+  @keyframes fade-in { to { opacity: 1; } }
+
+  /* Front of the envelope (three folded panels) */
+  .pocket { position: absolute; inset: 0; z-index: 3; }
+  .pocket.l { background: #f1d1d6; clip-path: polygon(0 0, 50% 56%, 0 100%); }
+  .pocket.r { background: #ebc4cb; clip-path: polygon(100% 0, 50% 56%, 100% 100%); }
+  .pocket.b { background: #f7dfe3; clip-path: polygon(0 100%, 50% 54%, 100% 100%); }
+
+  /* The top flap */
+  .flap {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%; height: 56%;
+    z-index: 4;
+    background: linear-gradient(#e4b0b9, #edc4cb);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    transform-origin: top center;
+  }
+  .scene.opened .flap { animation: flap-open 0.9s ease-in-out 0.35s forwards; }
+  @keyframes flap-open {
+    0%   { transform: rotateX(0deg);   z-index: 4; }
+    49%  { z-index: 4; }
+    50%  { transform: rotateX(90deg);  z-index: 1; }
+    100% { transform: rotateX(180deg); z-index: 1; }
+  }
+
+  /* Wax seal */
+  .seal {
+    position: absolute;
+    left: 50%; top: 56%;
+    width: calc(var(--w) * 0.16);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #e0334f, #8f0c28 70%);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), inset 0 -3px 5px rgba(0, 0, 0, 0.3);
+    color: rgba(255, 205, 215, 0.8);
+    font-size: calc(var(--w) * 0.085);
+    line-height: 1;
+  }
+  .scene.opened .seal { animation: seal-pop 0.45s ease forwards; }
+  @keyframes seal-pop {
+    0%   { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+    40%  { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.6);  opacity: 0; }
+  }
+
+  /* The letter slides up, then comes forward */
+  .scene.opened .letter { animation: letter-out 2.3s cubic-bezier(0.4, 0, 0.2, 1) 1.25s forwards; }
+  @keyframes letter-out {
+    0%   { transform: translateY(0) scale(1);       z-index: 2; }
+    45%  { transform: translateY(-62%) scale(1);    z-index: 2; }
+    46%  { z-index: 6; }
+    100% { transform: translateY(-50%) scale(1.28); z-index: 6; }
+  }
+
+  .hint {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--blush);
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  .scene.opened .hint { animation: none; opacity: 0; transition: opacity 0.4s ease; }
+  @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+  /* ---------- Hearts (created only after the letter opens) ---------- */
+  .hearts { position: fixed; inset: 0; z-index: 10; pointer-events: none; overflow: hidden; }
+  .heart {
+    position: absolute;
+    bottom: -3rem;
+    opacity: 0;
+    will-change: transform, opacity;
+    animation: rise linear forwards;
+  }
+  @keyframes rise {
+    0%   { transform: translateY(0) translateX(0) scale(0.7); opacity: 0; }
+    10%  { opacity: 0.9; }
+    100% { transform: translateY(-118vh) translateX(var(--drift)) scale(1.15); opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bob, .hint { animation: none; }
+  }
+</style>
+</head>
+<body>
+<main id="stage">
+  <div class="hearts" id="hearts" aria-hidden="true"></div>
+
+  <div class="scene" id="scene">
+    <div class="bob">
+      <button class="env" id="env" type="button" aria-label="دوسي عشان يفتح">
+        <span class="env-back"></span>
+        <span class="letter"><span class="letter-text" id="letterText"></span></span>
+        <span class="pocket l"></span>
+        <span class="pocket r"></span>
+        <span class="pocket b"></span>
+        <span class="flap"></span>
+        <span class="seal" aria-hidden="true">♥</span>
+      </button>
+    </div>
+    <p class="hint">دوسي عشان يفتح</p>
+  </div>
+
+  <div class="gate" id="gate">
+    <svg class="lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/>
+      <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>
+    </svg>
+    <label class="sr" for="pw">كلمة السر</label>
+    <div class="row">
+      <input id="pw" type="password" placeholder="كلمة السر" autocomplete="off" autofocus>
+      <button class="go" id="go" type="button">افتح</button>
+    </div>
+    <p class="msg-error" id="msg" role="alert"></p>
+  </div>
+</main>
+
+<script>
+  /* ------------------------------------------------------------
+     كلمة السر الحالية: mylove
+     الرسالة اللي جوه الجواب مش مكتوبة في الصفحة، بتتحط بس بعد الباسورد الصح.
+     الموقع بيخزّن "بصمة" الباسورد مش الباسورد نفسه.
+     ------------------------------------------------------------ */
+  const SHA256_HASH = "fac445f594a545116747701d3a307109432735698cabeebf65f09ac5d343d78b";
+  const FALLBACK_HASH = "1517e611e16cf7"; // لو المتصفح مش بيدعم SHA-256
+  const LETTER_B64 = "SSBsb3ZlIHlvdSwgTWl5b3NoaSDwn5iZ";
+
+  const stage = document.getElementById("stage");
+  const scene = document.getElementById("scene");
+  const env = document.getElementById("env");
+  const letterText = document.getElementById("letterText");
+  const pw = document.getElementById("pw");
+  const go = document.getElementById("go");
+  const msg = document.getElementById("msg");
+  const hearts = document.getElementById("hearts");
+
+  function cyrb53(str, seed = 0) {
+    let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+    for (let i = 0, ch; i < str.length; i++) {
+      ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+  }
+
+  async function isCorrect(input) {
+    if (window.crypto && crypto.subtle) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+      const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+      return hex === SHA256_HASH;
+    }
+    return cyrb53(input) === FALLBACK_HASH;
+  }
+
+  function letterMessage() {
+    const bytes = Uint8Array.from(atob(LETTER_B64), c => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes).replace(", ", ",\n");
+  }
+
+  const HEART_COLORS = ["#ff3d71", "#ff6b93", "#ffb3c7", "#e11d48", "#ff8fab", "#ffd9b0", "#d6204a"];
+
+  function spawnHeart() {
+    const h = document.createElement("span");
+    h.className = "heart";
+    h.textContent = "♥";
+    h.style.left = Math.random() * 100 + "vw";
+    h.style.fontSize = 10 + Math.random() * 36 + "px";
+    h.style.color = HEART_COLORS[(Math.random() * HEART_COLORS.length) | 0];
+    h.style.setProperty("--drift", (Math.random() * 160 - 80) + "px");
+    const dur = 5 + Math.random() * 5;
+    h.style.animationDuration = dur + "s";
+    hearts.appendChild(h);
+    setTimeout(() => h.remove(), dur * 1000 + 200);
+  }
+
+  function startHearts() {
+    // big burst, then a constant stream
+    for (let i = 0; i < 220; i++) setTimeout(spawnHeart, i * 8);
+    setInterval(() => { spawnHeart(); spawnHeart(); }, 50);
+  }
+
+  let opened = false;
+  env.addEventListener("click", () => {
+    if (opened) return;
+    opened = true;
+    scene.classList.add("opened");
+    setTimeout(startHearts, 3400);
+  });
+
+  async function tryOpen() {
+    const value = pw.value.trim();
+    if (!value) { msg.textContent = "اكتب كلمة السر الأول."; return; }
+
+    if (await isCorrect(value)) {
+      msg.textContent = "";
+      pw.value = "";
+      pw.blur();
+      letterText.textContent = letterMessage();
+      document.title = "💌";
+      stage.classList.add("open");
+      setTimeout(() => env.focus({ preventScroll: true }), 700);
+    } else {
+      msg.textContent = "كلمة السر مش صحيحة، جرّب تاني.";
+      pw.classList.remove("shake");
+      void pw.offsetWidth;
+      pw.classList.add("shake");
+      pw.select();
+    }
+  }
+
+  go.addEventListener("click", tryOpen);
+  pw.addEventListener("keydown", e => { if (e.key === "Enter") tryOpen(); });
+</script>
+</body>
+</html>
